@@ -33,6 +33,14 @@
           A
         </div>
       </div>
+      <div class="setting-font-family" @click="showFontFamilyPopup">
+        <div class="setting-font-family-text-wrapper">
+          <span class="setting-font-family-text">{{ defaultFontFamily }}</span>
+        </div>
+        <div class="setting-font-family-icon-wrapper">
+          <span class="setting-font-family-icon icon-forward"></span>
+        </div>
+      </div>
     </div>
   </transition>
 </template>
@@ -47,29 +55,35 @@ export default {
       fontSizeList: fontSizeList,
     };
   },
-  methods:{
-    setFontSize(fontSize){
-      console.log(fontSize)
-      console.log(this)
-      console.log(this.rendition)
-      this.rendition.themes.fontSize(fontSize)
-    }
-  }
+  methods: {
+    setFontSize(fontSize) {
+      //设置阅读器字号
+      this.setDefaultFontSize(fontSize);
+      this.currentBook.rendition.themes.fontSize(fontSize + "px");
+    },
+    showFontFamilyPopup() {
+      this.setFontFamilyVisible(true);
+      console.log("oooook");
+    },
+  },
 };
 </script>
 <style lang="scss" scoped>
 @import "../../assets/styles/global.scss";
 .setting-wrapper {
+  display: flex;
+  flex-direction: column;
   position: absolute;
   bottom: px2rem(48);
   left: 0;
   z-index: 101;
   width: 100%;
-  height: px2rem(60);
+  height: px2rem(90);
   background: white;
   box-shadow: 0 px2rem(-8) px2rem(8) rgba(0, 0, 0, 0.15);
   .setting-font-size {
     display: flex;
+    flex: 2;
     height: 100%;
     .preview {
       flex: 0 0 px2rem(40);
@@ -127,6 +141,18 @@ export default {
           }
         }
       }
+    }
+  }
+  .setting-font-family {
+    flex: 1;
+    font-size: px2rem(14);
+    @include center;
+
+    .setting-font-family-text-wrapper {
+      @include center;
+    }
+    .setting-font-family-icon-wrapper {
+      @include center;
     }
   }
 }

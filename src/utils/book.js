@@ -7,3 +7,10 @@ export const fontSizeList = [
     { fontSize: 22 },
     { fontSize: 24 }
 ]
+export const FONT_FAMILY = [
+    { font: 'Arial' },
+    { font: 'Cabin' },
+    { font: 'Days One' },
+    { font: 'Montserrat' },
+    { font: 'Tangerine' }
+]

@@ -30,13 +30,14 @@ export default {
       //切换菜单栏的显示与隐藏
       // this.$store.dispatch("setMenuVisible", !this.menuVisible);
       this.setMenuVisible(!this.menuVisible);
-      this.setSettingVisible(-1)
+      this.setSettingVisible(-1);
+      this.setFontFamilyVisible(false);
     },
     hideTitleAndMenu() {
       // this.$store.dispatch("setMenuVisible", false);
       this.setMenuVisible(false);
-      this.setSettingVisible(-1)
-
+      this.setSettingVisible(-1);
+      this.setFontFamilyVisible(false);
     },
     initePub() {
       //本地的nginx服务器地址
@@ -46,6 +47,8 @@ export default {
         ".epub";
 
       this.book = new Epub(url);
+      //设置当前的的电子书对象
+      this.setCurrentBook(this.book);
       let readerEl = document.getElementById("reader");
       //   解析电子书，通过this.rendition储存起来
       this.rendition = this.book.renderTo(readerEl, {
@@ -58,13 +61,15 @@ export default {
       console.log(this.rendition);
       //绑定触摸开始时事件
       this.rendition.on("touchstart", (event) => {
-        console.log(event);
+        // event.preventDefault();
+        event.stopPropagation();
         this.touchStartX = event.changedTouches[0].clientX;
         this.touchStartTime = event.timeStamp;
       });
       //绑定触摸结束时间
       this.rendition.on("touchend", (event) => {
-        console.log(event);
+        // event.preventDefault();
+        event.stopPropagation();
         //获取滑动距离和滑动的时间
         let offsetX = this.touchStartX - event.changedTouches[0].clientX;
         let touchTime = event.timeStamp - this.touchStartTime;
@@ -79,6 +84,25 @@ export default {
         } else if (offsetX > -40 && offsetX < 40) {
           this.toggleTitleMenu();
         }
+      });
+      //阅读器渲染毕，可以获取资源文件，contents管理资源
+      this.rendition.hooks.content.register((contents) => {
+        Promise.all([
+          contents.addStylesheet(
+            `${process.env.VUE_APP_RES_URL}/fonts/daysOne.css`
+          ),
+          contents.addStylesheet(
+            `${process.env.VUE_APP_RES_URL}/fonts/cabin.css`
+          ),
+          contents.addStylesheet(
+            `${process.env.VUE_APP_RES_URL}/fonts/montserrat.css`
+          ),
+          contents.addStylesheet(
+            `${process.env.VUE_APP_RES_URL}/fonts/tangerine.css`
+          ),
+        ]).then(() => {
+          console.log("字体注入完毕", process.env.VUE_APP_RES_URL);
+        });
       });
     },
   },

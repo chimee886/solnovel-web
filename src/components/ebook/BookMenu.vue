@@ -21,12 +21,14 @@
       </div>
     </transition>
     <BookSetFont />
+    <BookSettingFontPopup/>
   </div>
 </template>
 <script>
 //通过引入mixin，解决每次需要访问vuex时，都需要书写computed代码的问题，同时解耦和方便维护
 import { bookMixin } from "../../utils/mixin";
 import BookSetFont from "./BookSetFont";
+import BookSettingFontPopup from "./BookSettingFontPopup";
 
 export default {
   mixins: [bookMixin],
@@ -39,6 +41,7 @@ export default {
   },
   components: {
     BookSetFont,
+    BookSettingFontPopup
   },
 };
 </script>
