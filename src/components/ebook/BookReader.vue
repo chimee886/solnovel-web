@@ -1,0 +1,101 @@
+<template>
+  <div class="book-reader">
+    <div id="reader"></div>
+  </div>
+</template>
+<script>
+//通过引入mixin，解决每次需要访问vuex时，都需要书写computed代码的问题，同时解耦和方便维护
+import { bookMixin } from "../../utils/mixin";
+import Epub from "epubjs";
+// import {px2rem} from '../../assets/styles/global.scss'
+global.ePub = Epub;
+
+export default {
+  name: "BookReader",
+  mixins: [bookMixin],
+  methods: {
+    prevPage() {
+      //上一页
+      this.rendition.prev();
+      //翻页自动隐藏菜单
+      this.hideTitleAndMenu();
+    },
+    nextPage() {
+      //下一页
+      this.rendition.next();
+      //翻页自动隐藏菜单
+      this.hideTitleAndMenu();
+    },
+    toggleTitleMenu() {
+      //切换菜单栏的显示与隐藏
+      // this.$store.dispatch("setMenuVisible", !this.menuVisible);
+      this.setMenuVisible(!this.menuVisible);
+      this.setSettingVisible(-1)
+    },
+    hideTitleAndMenu() {
+      // this.$store.dispatch("setMenuVisible", false);
+      this.setMenuVisible(false);
+      this.setSettingVisible(-1)
+
+    },
+    initePub() {
+      //本地的nginx服务器地址
+      const url =
+        "http://localhost:8010/epub/" +
+        this.$store.state.book.fileName + //这里可以替换为this.fileName
+        ".epub";
+
+      this.book = new Epub(url);
+      let readerEl = document.getElementById("reader");
+      //   解析电子书，通过this.rendition储存起来
+      this.rendition = this.book.renderTo(readerEl, {
+        width: window.innerWidth,
+        height: window.innerHeight,
+        // method: "default", //兼容微信,开启此选项，会造成生成的iframe宽度为0
+      });
+      // 通过display方法渲染电子书，此时会在DOM中生成iframe
+      this.rendition.display();
+      console.log(this.rendition);
+      //绑定触摸开始时事件
+      this.rendition.on("touchstart", (event) => {
+        console.log(event);
+        this.touchStartX = event.changedTouches[0].clientX;
+        this.touchStartTime = event.timeStamp;
+      });
+      //绑定触摸结束时间
+      this.rendition.on("touchend", (event) => {
+        console.log(event);
+        //获取滑动距离和滑动的时间
+        let offsetX = this.touchStartX - event.changedTouches[0].clientX;
+        let touchTime = event.timeStamp - this.touchStartTime;
+
+        //根据滑动距离和时间判断动作
+        if (offsetX > 40 && touchTime < 500) {
+          this.nextPage();
+        } else if (offsetX < -40 && touchTime < 500) {
+          this.prevPage();
+        } else if (touchTime >= 500) {
+          console.log("滑动时间过长");
+        } else if (offsetX > -40 && offsetX < 40) {
+          this.toggleTitleMenu();
+        }
+      });
+    },
+  },
+  mounted() {
+    console.log(this.$route);
+    const fileName = this.$route.params.FileName.split("|").join("/");
+    this.setFileName(fileName).then(() => {
+      this.initePub();
+    });
+  },
+};
+</script>
+<style lang="scss" scoped>
+@import "../../assets/styles/global.scss";
+@import "../../assets/fonts/daysOne.css";
+.test {
+  font-family: "Days One";
+  font-size: px2rem(30);
+}
+</style>
