@@ -4,6 +4,7 @@
       <div class="setting-theme">
         <div
           class="setting-theme-item"
+          :class="{ selected: isSelected(item) }"
           v-for="(item, index) in themeList"
           :key="index"
           @click="setTheme(item)"
@@ -153,6 +154,9 @@ export default {
         &.selected {
           color: #333;
         }
+      }
+      &.selected {
+        box-shadow: 0 px2rem(6) px2rem(8) rgba(0, 0, 0, .2);
       }
     }
   }
