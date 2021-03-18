@@ -1,6 +1,6 @@
 <template>
   <transition name="popup-slide-up">
-    <div @click="handle" class="ebook-popup-list" v-show="fontFamilyVisible">
+    <div class="ebook-popup-list" v-show="fontFamilyVisible">
       <div class="ebook-popup-title">
         <div class="ebook-popup-title-icon" @click="hideFontFamilySetting">
           <span class="icon-down2"></span>
@@ -31,6 +31,7 @@
 <script>
 import { bookMixin } from "../../utils/mixin";
 import { FONT_FAMILY } from "../../utils/book";
+import { saveFontFamily } from "../../utils/localStorage";
 
 export default {
   name: "BookSettingFontPopup",
@@ -42,17 +43,19 @@ export default {
   },
   methods: {
     hideFontFamilySetting() {
+      //隐藏字体设置菜单
       this.setFontFamilyVisible(false);
     },
     setFontFamily(font) {
+      // 设置字体
       this.setDefaultFontFamily(font);
       this.currentBook.rendition.themes.font(font);
+      //将字体保存到localstorage
+      saveFontFamily(this.fileName,font)
+      console.log(`字体设置为${font}`)
     },
     isSelected(font) {
       return this.defaultFontFamily === font;
-    },
-    handle() {
-      console.log(this.fontFamily);
     },
   },
 };
@@ -79,9 +82,9 @@ export default {
       left: px2rem(10);
       padding: 0 px2rem(6);
       font-size: px2rem(14);
-      .icon-down2{
-          font-size: px2rem(16);
-          font-weight: bold;
+      .icon-down2 {
+        font-size: px2rem(16);
+        font-weight: bold;
       }
     }
     .ebook-popup-title-text {
@@ -94,22 +97,22 @@ export default {
       display: flex;
       padding: px2rem(14) px2rem(16);
       .ebook-popup-item-text {
-          align-items: center;
-          font-size: px2rem(16);
+        align-items: center;
+        font-size: px2rem(16);
         flex: 1;
         @include left;
-        &.selected{
-            color: #346cb9;
+        &.selected {
+          color: #346cb9;
         }
       }
       .ebook-popup-item-check {
         flex: 1;
         text-align: right;
         .icon-check {
-            font-size: px2rem(15);
-            font-weight: bold;
-            color: #346cb9;
-          }
+          font-size: px2rem(15);
+          font-weight: bold;
+          color: #346cb9;
+        }
       }
     }
   }

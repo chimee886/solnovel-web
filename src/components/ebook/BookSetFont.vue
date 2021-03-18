@@ -47,6 +47,8 @@
 <script>
 import { bookMixin } from "../../utils/mixin";
 import { fontSizeList } from "../../utils/book";
+import { saveFontSize } from "../../utils/localStorage";
+
 export default {
   name: "BookSetFont",
   mixins: [bookMixin],
@@ -60,6 +62,8 @@ export default {
       //设置阅读器字号
       this.setDefaultFontSize(fontSize);
       this.currentBook.rendition.themes.fontSize(fontSize + "px");
+      // 设置成功后将字号保存到localstorage
+      saveFontSize(this.fileName,fontSize)
     },
     showFontFamilyPopup() {
       this.setFontFamilyVisible(true);

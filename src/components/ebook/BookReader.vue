@@ -7,6 +7,7 @@
 //通过引入mixin，解决每次需要访问vuex时，都需要书写computed代码的问题，同时解耦和方便维护
 import { bookMixin } from "../../utils/mixin";
 import Epub from "epubjs";
+import { getFontFamily, getFontSize } from "../../utils/localStorage";
 // import {px2rem} from '../../assets/styles/global.scss'
 global.ePub = Epub;
 
@@ -57,7 +58,20 @@ export default {
         // method: "default", //兼容微信,开启此选项，会造成生成的iframe宽度为0
       });
       // 通过display方法渲染电子书，此时会在DOM中生成iframe
-      this.rendition.display();
+      this.rendition.display().then(() => {
+        // 获取localstorage中缓存的字体和字号
+        if (getFontFamily(this.fileName)) {
+          this.setDefaultFontFamily(getFontFamily(this.fileName));
+          this.currentBook.rendition.themes.font(getFontFamily(this.fileName));
+        }
+        if (getFontSize(this.fileName)) {
+          this.setDefaultFontSize(getFontSize(this.fileName));
+          this.currentBook.rendition.themes.fontSize(
+            getFontSize(this.fileName) + "px"
+          );
+        }
+        // console.log(getFontSize(this.fileName));
+      });
       console.log(this.rendition);
       //绑定触摸开始时事件
       this.rendition.on("touchstart", (event) => {
@@ -85,7 +99,7 @@ export default {
           this.toggleTitleMenu();
         }
       });
-      //阅读器渲染毕，可以获取资源文件，contents管理资源
+      //阅读器渲染毕，可以获取资源文件，contents管理资源,向iiframe注入css文件
       this.rendition.hooks.content.register((contents) => {
         Promise.all([
           contents.addStylesheet(
