@@ -7,13 +7,24 @@
 //通过引入mixin，解决每次需要访问vuex时，都需要书写computed代码的问题，同时解耦和方便维护
 import { bookMixin } from "../../utils/mixin";
 import Epub from "epubjs";
-import { getFontFamily, getFontSize } from "../../utils/localStorage";
+import {
+  getFontFamily,
+  getFontSize,
+  saveTheme,
+  getTheme,
+} from "../../utils/localStorage";
+import { themeList } from "../../utils/book";
 // import {px2rem} from '../../assets/styles/global.scss'
 global.ePub = Epub;
 
 export default {
   name: "BookReader",
   mixins: [bookMixin],
+  computed: {
+    themeList() {
+      return themeList(this);
+    },
+  },
   methods: {
     prevPage() {
       //上一页
@@ -59,6 +70,18 @@ export default {
       });
       // 通过display方法渲染电子书，此时会在DOM中生成iframe
       this.rendition.display().then(() => {
+        this.themeList.forEach((theme) => {
+          this.rendition.themes.register(theme.name, theme.style);
+        });
+
+        let defaultTheme = getTheme(this.fileName);
+        if (!defaultTheme) {
+          defaultTheme = this.themeList[0].name;
+          saveTheme(this.fileName, defaultTheme);
+        }
+        this.setDefaultTheme(defaultTheme);
+        this.rendition.themes.select(defaultTheme);
+
         // 获取localstorage中缓存的字体和字号
         if (getFontFamily(this.fileName)) {
           this.setDefaultFontFamily(getFontFamily(this.fileName));

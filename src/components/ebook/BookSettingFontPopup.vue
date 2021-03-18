@@ -5,7 +5,7 @@
         <div class="ebook-popup-title-icon" @click="hideFontFamilySetting">
           <span class="icon-down2"></span>
         </div>
-        <span class="ebook-popup-title-text">选择语言</span>
+        <span class="ebook-popup-title-text">{{$t('book.selectFont')}}</span>
       </div>
       <div class="ebook-popup-list-wrapper">
         <div
