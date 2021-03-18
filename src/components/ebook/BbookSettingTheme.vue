@@ -23,7 +23,7 @@
 </template>
 <script>
 import { bookMixin } from "../../utils/mixin";
-import { themeList } from "../../utils/book";
+import { themeList, changeGlobalTheme } from "../../utils/book";
 import { saveTheme } from "../../utils/localStorage";
 export default {
   name: "BbookSettingTheme",
@@ -35,8 +35,17 @@ export default {
   },
   methods: {
     setTheme(item) {
+      console.log(item);
       this.setDefaultTheme(item.name).then(() => {
+        //设置阅读器主题
         this.currentBook.rendition.themes.select(this.defaultTheme);
+        //设置阅读器主题
+        changeGlobalTheme(
+          process.env.VUE_APP_RES_URL +
+            "/theme/theme_" +
+            this.defaultTheme.toLowerCase() +
+            ".css"
+        );
       });
       saveTheme(this.fileName, item.name);
     },

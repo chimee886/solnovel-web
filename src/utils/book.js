@@ -15,7 +15,6 @@ export const FONT_FAMILY = [
     { font: 'Montserrat' },
     { font: 'Tangerine' }
 ]
-
 export function themeList(vue) {
     return [{
             alias: vue.$t('book.themeDefault'),
@@ -98,4 +97,16 @@ export function themeList(vue) {
             }
         }
     ]
+}
+//定义设置全局样式方法
+export function changeGlobalTheme(href) {
+    let link = document.querySelector('#global-theme')
+    if (!link) {
+        link = document.createElement('link')
+        link.setAttribute('id', 'global-theme')
+        link.setAttribute('rel', 'stylesheet')
+        let head = document.querySelector('head')
+        head.appendChild(link)
+    }
+    href != link.getAttribute('href') ? link.setAttribute('href', href) : null
 }

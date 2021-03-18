@@ -13,7 +13,8 @@ import {
   saveTheme,
   getTheme,
 } from "../../utils/localStorage";
-import { themeList } from "../../utils/book";
+import { themeList, changeGlobalTheme } from "../../utils/book";
+
 // import {px2rem} from '../../assets/styles/global.scss'
 global.ePub = Epub;
 
@@ -80,7 +81,15 @@ export default {
           saveTheme(this.fileName, defaultTheme);
         }
         this.setDefaultTheme(defaultTheme);
+        //设置阅读器主题
         this.rendition.themes.select(defaultTheme);
+        //设置阅读器主题
+        changeGlobalTheme(
+          process.env.VUE_APP_RES_URL +
+            "/theme/theme_" +
+            this.defaultTheme.toLowerCase() +
+            ".css"
+        );
 
         // 获取localstorage中缓存的字体和字号
         if (getFontFamily(this.fileName)) {
