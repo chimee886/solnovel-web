@@ -12,6 +12,7 @@ import {
   getFontSize,
   saveTheme,
   getTheme,
+  getLocation
 } from "../../utils/localStorage";
 import { themeList, changeGlobalTheme } from "../../utils/book";
 
@@ -29,13 +30,17 @@ export default {
   methods: {
     prevPage() {
       //上一页
-      this.rendition.prev();
+      this.rendition.prev().then(()=>{
+        this.refreshProgress()
+      })
       //翻页自动隐藏菜单
       this.hideTitleAndMenu();
     },
     nextPage() {
       //下一页
-      this.rendition.next();
+      this.rendition.next().then(()=>{
+        this.refreshProgress()
+      })
       //翻页自动隐藏菜单
       this.hideTitleAndMenu();
     },
@@ -52,59 +57,28 @@ export default {
       this.setSettingVisible(-1);
       this.setFontFamilyVisible(false);
     },
-    initePub() {
-      //本地的nginx服务器地址
-      const url =
-        "http://localhost:8010/epub/" +
-        this.$store.state.book.fileName + //这里可以替换为this.fileName
-        ".epub";
-
-      this.book = new Epub(url);
-      //设置当前的的电子书对象
-      this.setCurrentBook(this.book);
-      let readerEl = document.getElementById("reader");
-      //   解析电子书，通过this.rendition储存起来
-      this.rendition = this.book.renderTo(readerEl, {
-        width: window.innerWidth,
-        height: window.innerHeight,
-        // method: "default", //兼容微信,开启此选项，会造成生成的iframe宽度为0
+    initTheme() {
+      this.themeList.forEach((theme) => {
+        this.rendition.themes.register(theme.name, theme.style);
       });
-      // 通过display方法渲染电子书，此时会在DOM中生成iframe
-      this.rendition.display().then(() => {
-        this.themeList.forEach((theme) => {
-          this.rendition.themes.register(theme.name, theme.style);
-        });
 
-        let defaultTheme = getTheme(this.fileName);
-        if (!defaultTheme) {
-          defaultTheme = this.themeList[0].name;
-          saveTheme(this.fileName, defaultTheme);
-        }
-        this.setDefaultTheme(defaultTheme);
-        //设置阅读器主题
-        this.rendition.themes.select(defaultTheme);
-        //设置阅读器主题
-        changeGlobalTheme(
-          process.env.VUE_APP_RES_URL +
-            "/theme/theme_" +
-            this.defaultTheme.toLowerCase() +
-            ".css"
-        );
-
-        // 获取localstorage中缓存的字体和字号
-        if (getFontFamily(this.fileName)) {
-          this.setDefaultFontFamily(getFontFamily(this.fileName));
-          this.currentBook.rendition.themes.font(getFontFamily(this.fileName));
-        }
-        if (getFontSize(this.fileName)) {
-          this.setDefaultFontSize(getFontSize(this.fileName));
-          this.currentBook.rendition.themes.fontSize(
-            getFontSize(this.fileName) + "px"
-          );
-        }
-        // console.log(getFontSize(this.fileName));
-      });
-      console.log(this.rendition);
+      let defaultTheme = getTheme(this.fileName);
+      if (!defaultTheme) {
+        defaultTheme = this.themeList[0].name;
+        saveTheme(this.fileName, defaultTheme);
+      }
+      this.setDefaultTheme(defaultTheme);
+      //设置阅读器主题
+      this.rendition.themes.select(defaultTheme);
+      //设置阅读器主题
+      changeGlobalTheme(
+        process.env.VUE_APP_RES_URL +
+          "/theme/theme_" +
+          this.defaultTheme.toLowerCase() +
+          ".css"
+      );
+    },
+    initGesture() {
       //绑定触摸开始时事件
       this.rendition.on("touchstart", (event) => {
         // event.preventDefault();
@@ -119,7 +93,6 @@ export default {
         //获取滑动距离和滑动的时间
         let offsetX = this.touchStartX - event.changedTouches[0].clientX;
         let touchTime = event.timeStamp - this.touchStartTime;
-
         //根据滑动距离和时间判断动作
         if (offsetX > 40 && touchTime < 500) {
           this.nextPage();
@@ -131,7 +104,30 @@ export default {
           this.toggleTitleMenu();
         }
       });
-      //阅读器渲染毕，可以获取资源文件，contents管理资源,向iiframe注入css文件
+    },
+    initFontSize() {
+      if (getFontSize(this.fileName)) {
+        this.setDefaultFontSize(getFontSize(this.fileName));
+        this.currentBook.rendition.themes.fontSize(
+          getFontSize(this.fileName) + "px"
+        );
+      }
+    },
+    initFontFamily() {
+      // 获取localstorage中缓存的字体和字号
+      if (getFontFamily(this.fileName)) {
+        this.setDefaultFontFamily(getFontFamily(this.fileName));
+        this.currentBook.rendition.themes.font(getFontFamily(this.fileName));
+      }
+    },
+    initRendition() {
+      let readerEl = document.getElementById("reader");
+      //   解析电子书，通过this.rendition储存起来
+      this.rendition = this.book.renderTo(readerEl, {
+        width: window.innerWidth,
+        height: window.innerHeight,
+        // method: "default", //兼容微信,开启此选项，会造成生成的iframe宽度为0
+      });
       this.rendition.hooks.content.register((contents) => {
         Promise.all([
           contents.addStylesheet(
@@ -150,6 +146,41 @@ export default {
           console.log("字体注入完毕", process.env.VUE_APP_RES_URL);
         });
       });
+    },
+    initePub() {
+      //本地的nginx服务器地址
+      const url =
+        process.env.VUE_APP_RES_URL +
+        "/epub/" +
+        this.$store.state.book.fileName + //这里可以替换为this.fileName
+        ".epub";
+
+      this.book = new Epub(url);
+      //设置当前的的电子书对象
+      this.setCurrentBook(this.book);
+      this.initRendition();
+
+      const location = getLocation(this.fileName)
+      // 通过display方法渲染电子书，此时会在DOM中生成iframe
+      this.display(location,()=>{
+        this.initTheme();
+        this.initFontFamily();
+        this.initFontSize();
+        this.refreshProgress()
+      })
+      this.initGesture();
+
+      this.book.ready
+        .then(() => {
+          return this.book.locations.generate(
+            750 * (window.innerWidth / 375) * (getFontSize(this.fileName) / 16)
+          );
+        })
+        .then(() => {
+          this.setBookAvailable(true)
+          this.refreshProgress()
+        });
+      //阅读器渲染毕，可以获取资源文件，contents管理资源,向iiframe注入css文件
     },
   },
   mounted() {

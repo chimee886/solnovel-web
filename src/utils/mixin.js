@@ -1,5 +1,6 @@
 import { mapGetters } from 'vuex';
 import { mapActions } from 'vuex';
+import { saveLocation } from '../utils/localStorage'
 //通过mapGetters可以实现通过this关键字直接访问state里面的数据，而不是每次使用this.$store.state.book.fileName
 export const bookMixin = {
     computed: {
@@ -48,6 +49,28 @@ export const bookMixin = {
             'setOffsetY',
             'setIsBookmark',
             'setSpeakingIconBottom'
-        ])
-    },
+        ]),
+        refreshProgress() {
+            const currentLocation = this.currentBook.rendition.currentLocation();
+            const startCfi = currentLocation.start.cfi;
+            const progress = this.currentBook.locations.percentageFromCfi(startCfi);
+            this.setProgress(Math.floor(progress * 100));
+            this.setSection(currentLocation.start.index)
+            saveLocation(this.fileName, startCfi)
+        },
+        display(target, cb) {
+            if (target) {
+                return this.currentBook.rendition.display(target).then(() => {
+                    this.refreshProgress()
+                    cb && cb()
+                })
+            } else {
+                return this.currentBook.rendition.display().then(() => {
+                    this.refreshProgress()
+                    cb && cb()
+                })
+            }
+        }
+    }
+
 }

@@ -21,7 +21,8 @@
       </div>
     </transition>
     <BookSetFont />
-    <BookSettingFontPopup/>
+    <BookSettingFontPopup />
+    <BookSetProgress />
   </div>
 </template>
 <script>
@@ -29,6 +30,7 @@
 import { bookMixin } from "../../utils/mixin";
 import BookSetFont from "./BookSetFont";
 import BookSettingFontPopup from "./BookSettingFontPopup";
+import BookSetProgress from "./BookSetProgress";
 
 export default {
   mixins: [bookMixin],
@@ -41,7 +43,8 @@ export default {
   },
   components: {
     BookSetFont,
-    BookSettingFontPopup
+    BookSettingFontPopup,
+    BookSetProgress,
   },
 };
 </script>
