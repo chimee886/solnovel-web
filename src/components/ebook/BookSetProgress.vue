@@ -100,11 +100,18 @@ export default {
       }
     },
     getReadTimeText() {
-      return this.$t("book.haveRead").replace("$1", this.getReadTimeByMinutes());
+      return this.$t("book.haveRead").replace(
+        "$1",
+        this.getReadTimeByMinutes()
+      );
     },
     getReadTimeByMinutes() {
-      let time = getReadTime(this.fileName) / 60
-      return Math.ceil(time);
+      let time = getReadTime(this.fileName) / 60;
+      if (!time) {
+        return 0;
+      } else {
+        return Math.ceil(time);
+      }
     },
   },
 };
