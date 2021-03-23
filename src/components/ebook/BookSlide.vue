@@ -9,7 +9,7 @@
           class="content"
           v-if="settingVisible === 3 || settingVisible === 4"
         >
-          <div class="content-page-wrapper">
+          <div class="content-page-wrapper" v-if="bookAvailable">
             <div class="content-page">
               <component :is="tab === 1 ? content : bookmark"></component>
             </div>
@@ -30,6 +30,9 @@
               </div>
             </div>
           </div>
+          <div v-else class="content-empty">
+            <BookLoading />
+          </div>
         </div>
       </transition>
       <div
@@ -43,10 +46,15 @@
 <script>
 import { bookMixin } from "../../utils/mixin";
 import BookSlideContent from "./BookSlideContent";
-import BookSlideBookmark from "./BookSlideBookmark"
+import BookSlideBookmark from "./BookSlideBookmark";
+import BookLoading from "../common/BookLoading";
+
 export default {
   name: "bookSlide",
   mixins: [bookMixin],
+  components: {
+    BookLoading,
+  },
   data: function () {
     return {
       tab: 1,
@@ -100,12 +108,9 @@ export default {
         }
       }
     }
-    .empty {
-      width: 100%;
-      height: 100%;
-      @include center;
-      font-size: px2rem(16);
-      color: #333;
+    .content-empty {
+        width: 100%;
+        height: 100%;
     }
   }
   .content-bg {

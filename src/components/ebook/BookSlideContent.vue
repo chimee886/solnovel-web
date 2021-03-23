@@ -11,7 +11,7 @@
           :placeholder="$t('book.searchHint')"
           @click="showSearchPage()"
           v-model="searchText"
-          @keyup.enter="search()"
+          @keyup.enter.exact="search()"
           ref="searchInput"
         />
       </div>
@@ -44,7 +44,7 @@
           <span class="progress">{{ progress + "%" }}</span>
           <span class="progress-text">{{ $t("book.haveRead2") }}</span>
         </div>
-        <div class="slide-contents-book-time">{{ getReadTime() }}</div>
+        <div class="slide-contents-book-time">{{ getReadTime(fileName) }}</div>
       </div>
     </div>
     <scroll-com
@@ -52,6 +52,7 @@
       :top="156"
       :bottom="48"
       ref="scroll"
+      v-show="!searchVisible"
     >
       <div
         class="slide-contents-item"
@@ -61,12 +62,27 @@
         <span
           class="slide-contents-item-label"
           :style="getItemStyle(item)"
-          :class="{ 'selected': section==index }"
+          :class="{ selected: section == index }"
           @click="display(item.href)"
           >{{ item.label }}</span
         >
         <span class="slide-contents-item-page"></span>
       </div>
+    </scroll-com>
+    <scroll-com
+      class="slide-search-list"
+      :top="66"
+      :bottom="48"
+      ref="scroll"
+      v-show="searchVisible"
+    >
+      <div
+        class="slide-search-item"
+        v-for="(item, index) in searchList"
+        :key="index"
+        @click="displayContent(item.cfi)"
+        v-html="item.excerpt"
+      ></div>
     </scroll-com>
   </div>
 </template>
@@ -74,6 +90,7 @@
 import { bookMixin } from "../../utils/mixin";
 import ScrollCom from "../common/Scroll";
 import { px2rem } from "../../utils/utils";
+import { getReadTime } from "../../utils/localStorage";
 
 export default {
   mixins: [bookMixin],
@@ -82,23 +99,65 @@ export default {
     return {
       searchText: "",
       searchVisible: false,
+      searchList: [],
     };
   },
   methods: {
+    //   搜索算法
+    doSearch(q) {
+      return Promise.all(
+        this.currentBook.spine.spineItems.map((item) =>
+          item
+            .load(this.currentBook.load.bind(this.currentBook))
+            .then(item.find.bind(item, q))
+            .finally(item.unload.bind(item))
+        )
+      ).then((results) => Promise.resolve([].concat.apply([], results)));
+    },
     showSearchPage() {
       this.searchVisible = true;
     },
     hideSearchPage() {
       this.searchVisible = false;
+      this.searchText = "";
+      this.searchList = [];
     },
-    search() {},
-    getReadTime() {},
+    getReadTime(fileName) {
+      console.log(getReadTime(fileName));
+      return getReadTime(fileName) / 60 + "分钟";
+    },
+    // 点击回车出发搜索方法
+    search() {
+      if (this.searchText && this.searchText.length > 0) {
+        this.doSearch(this.searchText).then((res) => {
+          res = res.map((item) => {
+            item.excerpt = item.excerpt
+              .replace(
+                this.searchText,
+                `<span class="content-search-text">${this.searchText}</span>`
+              )
+              .replace(
+                this.searchText.toUpperCase(),
+                `<span class="content-search-text">${this.searchText.toUpperCase()}</span>`
+              );
+            return item;
+          });
+          this.searchList = res;
+        });
+      }
+    },
     getItemStyle(item) {
       return `margin-left:${px2rem(item.level * 15)}`;
     },
-    handle(ii){
-        console.log(ii)
-    }
+    handle(ii) {
+      console.log(ii);
+    },
+    displayContent(target) {
+      this.display(target).then(() => {
+        //   高亮显示语法
+        this.currentBook.rendition.annotations.highlight(target);
+      });
+    },
   },
 };
 </script>
@@ -224,15 +283,15 @@ export default {
       }
     }
   }
-  //   .slide-search-list {
-  //     padding: 0 px2rem(15);
-  //     box-sizing: border-box;
-  //     .slide-search-item {
-  //       font-size: px2rem(14);
-  //       line-height: px2rem(16);
-  //       padding: px2rem(20) 0;
-  //       box-sizing: border-box;
-  //     }
-  //   }
+  .slide-search-list {
+    padding: 0 px2rem(15);
+    box-sizing: border-box;
+    .slide-search-item {
+      font-size: px2rem(14);
+      line-height: px2rem(16);
+      padding: px2rem(20) 0;
+      box-sizing: border-box;
+    }
+  }
 }
 </style>
