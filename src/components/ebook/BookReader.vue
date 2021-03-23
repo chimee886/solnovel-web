@@ -12,7 +12,7 @@ import {
   getFontSize,
   saveTheme,
   getTheme,
-  getLocation
+  getLocation,
 } from "../../utils/localStorage";
 import { themeList, changeGlobalTheme } from "../../utils/book";
 
@@ -30,17 +30,17 @@ export default {
   methods: {
     prevPage() {
       //上一页
-      this.rendition.prev().then(()=>{
-        this.refreshProgress()
-      })
+      this.rendition.prev().then(() => {
+        this.refreshProgress();
+      });
       //翻页自动隐藏菜单
       this.hideTitleAndMenu();
     },
     nextPage() {
       //下一页
-      this.rendition.next().then(()=>{
-        this.refreshProgress()
-      })
+      this.rendition.next().then(() => {
+        this.refreshProgress();
+      });
       //翻页自动隐藏菜单
       this.hideTitleAndMenu();
     },
@@ -147,6 +147,44 @@ export default {
         });
       });
     },
+    parseBook() {
+      // 获取封面图片
+      this.book.loaded.cover.then((cover) => {
+        console.log(cover);
+        this.book.archive.createUrl(cover).then((url) => {
+          this.setCover(url);
+        });
+      });
+      // 获取标题，作者等信息
+      this.book.loaded.metadata.then((metadata) => {
+        console.log(metadata);
+        this.setMetadata(metadata);
+      });
+      // 获取book目录
+      this.book.loaded.navigation.then((nav) => {
+        console.log(nav);
+        const navItem = (function flatten(arr) {
+          return [].concat(...arr.map((v) => [v, ...flatten(v.subitems)]));
+        })(nav.toc);
+        console.log(navItem);
+        function find(item, v = 0) {
+          const parent = navItem.filter((it) => it.id === item.parent)[0];
+          return !item.parent ? v : parent ? find(parent, ++v) : v;
+        }
+
+        navItem.forEach((item) => {
+          item.level = find(item);
+          item.total = 0;
+          item.pagelist = [];
+          if (item.href.match(/^(.*)\.html$/)) {
+            item.idhref = item.href.match(/^(.*)\.html$/)[1];
+          } else if (item.href.match(/^(.*)\.xhtml$/)) {
+            item.idhref = item.href.match(/^(.*)\.xhtml$/)[1];
+          }
+        });
+        this.setNavigation(navItem);
+      });
+    },
     initePub() {
       //本地的nginx服务器地址
       const url =
@@ -160,15 +198,16 @@ export default {
       this.setCurrentBook(this.book);
       this.initRendition();
 
-      const location = getLocation(this.fileName)
+      const location = getLocation(this.fileName);
       // 通过display方法渲染电子书，此时会在DOM中生成iframe
-      this.display(location,()=>{
+      this.display(location, () => {
         this.initTheme();
         this.initFontFamily();
         this.initFontSize();
-        this.refreshProgress()
-      })
+        this.refreshProgress();
+      });
       this.initGesture();
+      this.parseBook();
 
       this.book.ready
         .then(() => {
@@ -177,8 +216,8 @@ export default {
           );
         })
         .then(() => {
-          this.setBookAvailable(true)
-          this.refreshProgress()
+          this.setBookAvailable(true);
+          this.refreshProgress();
         });
       //阅读器渲染毕，可以获取资源文件，contents管理资源,向iiframe注入css文件
     },

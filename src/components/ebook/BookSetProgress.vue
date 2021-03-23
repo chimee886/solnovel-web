@@ -44,14 +44,20 @@ export default {
   mixins: [bookMixin],
   computed: {
     getSectionName() {
-      if (this.section) {
-        const sectionInfo = this.currentBook.section(this.section);
-        if (sectionInfo && sectionInfo.href) {
-          console.log(this.currentBook.navigation.get(sectionInfo.href).label);
-          return this.currentBook.navigation.get(sectionInfo.href).label;
-        }
-      }
-      return "";
+      //   if (this.section) {
+      //     const sectionInfo = this.currentBook.section(this.section);
+      //     if (
+      //       sectionInfo &&
+      //       sectionInfo.href &&
+      //       this.currentBook &&
+      //       this.currentBook.navigation
+      //     ) {
+      //       console.log(this.currentBook.navigation.get(sectionInfo.href).label);
+      //       return this.currentBook.navigation.get(sectionInfo.href).label;
+      //     }
+      //   }
+      //   return "";
+      return this.section ? this.navigation[this.section].label : "";
     },
   },
   methods: {
