@@ -11,9 +11,10 @@
         >
           <div class="content-page-wrapper" v-if="bookAvailable">
             <div class="content-page">
-              <component :is="tab === 1 ? content : bookmark"></component>
+              <!-- <component :is="tab === 1 ? content : bookmark"></component> -->
+              <slide-content v-if="tab===1"></slide-content>
             </div>
-            <div class="content-page-tab">
+            <!-- <div class="content-page-tab">
               <div
                 class="content-page-tab-item"
                 :class="{ selected: tab === 1 }"
@@ -28,7 +29,7 @@
               >
                 {{ $t("book.bookmark") }}
               </div>
-            </div>
+            </div> -->
           </div>
           <div v-else class="content-empty">
             <BookLoading />
@@ -45,8 +46,7 @@
 </template>
 <script>
 import { bookMixin } from "../../utils/mixin";
-import BookSlideContent from "./BookSlideContent";
-import BookSlideBookmark from "./BookSlideBookmark";
+import SlideContent from "./BookSlideContent"
 import BookLoading from "../common/BookLoading";
 
 export default {
@@ -54,16 +54,16 @@ export default {
   mixins: [bookMixin],
   components: {
     BookLoading,
+    SlideContent,
   },
   data: function () {
     return {
       tab: 1,
-      content: BookSlideContent,
-      bookmark: BookSlideBookmark,
     };
   },
   methods: {
     selectTab(x) {
+      console.log("tab", x);
       this.tab = x;
     },
     hideMenuVisible() {
@@ -109,8 +109,8 @@ export default {
       }
     }
     .content-empty {
-        width: 100%;
-        height: 100%;
+      width: 100%;
+      height: 100%;
     }
   }
   .content-bg {

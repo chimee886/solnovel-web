@@ -50,7 +50,7 @@
     <scroll-com
       class="slide-contents-list"
       :top="156"
-      :bottom="48"
+      :bottom="0"
       ref="scroll"
       v-show="!searchVisible"
     >
@@ -72,7 +72,7 @@
     <scroll-com
       class="slide-search-list"
       :top="66"
-      :bottom="48"
+      :bottom="0"
       ref="scroll"
       v-show="searchVisible"
     >

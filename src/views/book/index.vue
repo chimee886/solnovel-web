@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="book" ref="book">
     <BookTitle />
     <BookReader />
     <BookMenu />
@@ -22,11 +22,24 @@ export default {
     BbookSettingTheme,
   },
   mixins: [bookMixin],
+  watch: {
+    offsetY(val) {
+      this.move(val);
+    },
+  },
   methods: {
+    move(val) {
+      this.$refs.book.style.transition = "";
+      if (val > 0) {
+        this.$refs.book.style.top = val + "px";
+      } else if (val === 0) {
+        this.$refs.book.style.top = 0;
+        this.$refs.book.style.transition = "all .2s linear";
+      }
+    },
     startLoopReadTime() {
       let readTime = getReadTime(this.fileName);
       if (!readTime) {
-        console.log("初次阅读");
         readTime = 0;
       }
       this.readTimeTask = setInterval(() => {
@@ -48,4 +61,11 @@ export default {
 </script>
 <style lang="scss" scoped>
 @import "../../assets/styles/global.scss";
+.book {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
 </style>

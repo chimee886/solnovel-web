@@ -1,6 +1,10 @@
 <template>
   <div class="book-reader">
     <div id="reader"></div>
+    <div
+      class="book-marsk"
+      @click="clickEvent($event)"
+    ></div>
   </div>
 </template>
 <script>
@@ -22,27 +26,81 @@ global.ePub = Epub;
 export default {
   name: "BookReader",
   mixins: [bookMixin],
+  data: function () {
+    return {
+      startY: 0,
+      endY: 0,
+      firstTouchY: 0,
+      moveValY: 0,
+    };
+  },
   computed: {
     themeList() {
       return themeList(this);
     },
   },
   methods: {
+    // onMouseEnter(e) {
+    //   this.mouseState = 1
+    //     this.mouseStartTime = e.timeStamp
+    //     e.preventDefault()
+    //     e.stopPropagation()
+    // },
+    // onmouseMove(e) {
+    //   if (this.mouseState === 1) {
+    //     this.mouseState = 2;
+    //   } else if (this.mouseState === 2) {
+    //     let offsetY = 0;
+    //     if (this.firstOffsetY) {
+    //       offsetY = e.clientY - this.firstOffsetY;
+    //       this.$store.commit("SET_OFFSETY", offsetY);
+    //     } else {
+    //       this.firstOffsetY = e.clientY;
+    //     }
+    //   }
+    //   e.preventDefault();
+    //   e.stopPropagation();
+    // },
+    // onMouseEnd(e) {
+    //   if (this.mouseState === 2) {
+    //     this.$store.dispatch("setOffsetY", 0);
+    //     this.firstOffsetY = 0;
+    //     this.mouseState = 3;
+    //   }
+    //   this.mouseEndTime = e.timeStamp;
+    //   // const time = this.mouseEndTime - this.mouseStartTime;
+    //   // if (time < 200) {
+    //   //   this.mouseState = 1;
+    //   // }
+    //   e.preventDefault();
+    //   e.stopPropagation();
+    // },
+    // moving(e) {
+    //   if (!this.firstTouchY) {
+    //     this.firstTouchY = e.touches[0].clientY;
+    //   }
+    //   this.moveValY = e.touches[0].clientY - this.firstTouchY;
+    //   this.setOffsetY(this.moveValY);
+    // },
+    // moveEnd() {
+    //   this.firstTouchY = 0;
+    //   this.setOffsetY(0);
+    // },
     prevPage() {
       //上一页
       this.rendition.prev().then(() => {
         this.refreshProgress();
       });
       //翻页自动隐藏菜单
-      this.hideTitleAndMenu();
+      this.menuVisible ? this.hideTitleAndMenu() : "";
     },
     nextPage() {
       //下一页
       this.rendition.next().then(() => {
         this.refreshProgress();
       });
+      this.menuVisible ? this.hideTitleAndMenu() : "";
       //翻页自动隐藏菜单
-      this.hideTitleAndMenu();
     },
     toggleTitleMenu() {
       //切换菜单栏的显示与隐藏
@@ -78,32 +136,44 @@ export default {
           ".css"
       );
     },
-    initGesture() {
-      //绑定触摸开始时事件
-      this.rendition.on("touchstart", (event) => {
-        // event.preventDefault();
-        event.stopPropagation();
-        this.touchStartX = event.changedTouches[0].clientX;
-        this.touchStartTime = event.timeStamp;
-      });
-      //绑定触摸结束时间
-      this.rendition.on("touchend", (event) => {
-        // event.preventDefault();
-        event.stopPropagation();
-        //获取滑动距离和滑动的时间
-        let offsetX = this.touchStartX - event.changedTouches[0].clientX;
-        let touchTime = event.timeStamp - this.touchStartTime;
-        //根据滑动距离和时间判断动作
-        if (offsetX > 40 && touchTime < 500) {
-          this.nextPage();
-        } else if (offsetX < -40 && touchTime < 500) {
-          this.prevPage();
-        } else if (touchTime >= 500) {
-          console.log("滑动时间过长");
-        } else if (offsetX > -40 && offsetX < 40) {
-          this.toggleTitleMenu();
-        }
-      });
+    // initGesture() {
+    //   //绑定触摸开始时事件
+    //   this.rendition.on("touchstart", (event) => {
+    //     // event.preventDefault();
+    //     event.stopPropagation();
+    //     this.touchStartX = event.changedTouches[0].clientX;
+    //     this.touchStartTime = event.timeStamp;
+    //   });
+    //   //绑定触摸结束时间
+    //   this.rendition.on("touchend", (event) => {
+    //     // event.preventDefault();
+    //     event.stopPropagation();
+    //     //获取滑动距离和滑动的时间
+    //     let offsetX = this.touchStartX - event.changedTouches[0].clientX;
+    //     let touchTime = event.timeStamp - this.touchStartTime;
+    //     //根据滑动距离和时间判断动作
+    //     if (offsetX > 40 && touchTime < 500) {
+    //       this.nextPage();
+    //     } else if (offsetX < -40 && touchTime < 500) {
+    //       this.prevPage();
+    //     } else if (touchTime >= 500) {
+    //       console.log("滑动时间过长");
+    //     } else if (offsetX > -40 && offsetX < 40) {
+    //       this.toggleTitleMenu();
+    //     }
+    //   });
+    // },
+    clickEvent(event) {
+      let screenWidth = window.innerWidth;
+      if (event.offsetX < screenWidth * 0.35) {
+        this.prevPage();
+      } else if (event.offsetX > screenWidth * 0.65) {
+        this.nextPage();
+      } else {
+        this.toggleTitleMenu();
+      }
+      event.preventDefault();
+      event.stopPropagation();
     },
     initFontSize() {
       if (getFontSize(this.fileName)) {
@@ -126,7 +196,8 @@ export default {
       this.rendition = this.book.renderTo(readerEl, {
         width: window.innerWidth,
         height: window.innerHeight,
-        // method: "default", //兼容微信,开启此选项，会造成生成的iframe宽度为0
+        method: "default", //兼容微信,开启此选项，会造成生成的iframe宽度为0
+        // flow:'scrolled',//滚动模式，不能兼容微信客户端，Safari浏览器
       });
       this.rendition.hooks.content.register((contents) => {
         Promise.all([
@@ -192,8 +263,9 @@ export default {
         "/epub/" +
         this.$store.state.book.fileName + //这里可以替换为this.fileName
         ".epub";
-
+      console.log(this);
       this.book = new Epub(url);
+      console.log(this);
       //设置当前的的电子书对象
       this.setCurrentBook(this.book);
       this.initRendition();
@@ -206,7 +278,7 @@ export default {
         this.initFontSize();
         this.refreshProgress();
       });
-      this.initGesture();
+      // this.initGesture();
       this.parseBook();
 
       this.book.ready
@@ -234,8 +306,15 @@ export default {
 <style lang="scss" scoped>
 @import "../../assets/styles/global.scss";
 @import "../../assets/fonts/daysOne.css";
-.test {
-  font-family: "Days One";
-  font-size: px2rem(30);
+
+.book-marsk {
+  width: 100%;
+  height: 100%;
+  background-color: red;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  opacity: 0;
 }
 </style>
