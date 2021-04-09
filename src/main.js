@@ -7,6 +7,7 @@ import 'lib-flexible'
 import './assets/styles/icon.css'
 import './assets/fonts/daysOne.css'
 import './assets/styles/global.scss'
+// import './mock'
 
 Vue.config.productionTip = false
 
@@ -16,4 +17,3 @@ new Vue({
     i18n,
     render: h => h(App)
 }).$mount('#app')
-console.log(i18n)

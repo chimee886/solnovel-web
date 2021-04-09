@@ -76,3 +76,32 @@ export const bookMixin = {
     }
 
 }
+export const storeHomeMixin = {
+    computed: {
+        ...mapGetters([
+            'offsetY',
+            'hotSearchOffsetY',
+            'flapCardVisible',
+            'loadingCardVisible',
+            'bookCardVisible'
+        ])
+    },
+    methods: {
+        ...mapActions([
+            'setOffsetY',
+            'setHotSearchOffsetY',
+            'setFlapCardVisible',
+            'setLoadingCardVisible',
+            'setBookCardVisible'
+        ]),
+        showBookDetail(book) {
+            this.$router.push({
+                path: '/store/detail',
+                query: {
+                    fileName: book.fileName,
+                    category: book.categoryText
+                }
+            })
+        }
+    }
+}
